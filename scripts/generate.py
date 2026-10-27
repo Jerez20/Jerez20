@@ -16,10 +16,12 @@ OUT = ROOT / "assets"
 FONT_B64 = base64.b64encode((OUT / "fonts" / "PressStart2P.woff2").read_bytes()).decode()
 
 # ── Paleta ────────────────────────────────────────────────────────────
-BG, BG2, PANEL = "#1a1033", "#24164a", "#2f1d5e"
-LINE, LINE_HI = "#6a3f97", "#b05e9a"
-TXT, DIM = "#e8e0ff", "#9b8fc9"
-CYAN, GOLD, PINK, GREEN, RED = "#4cc9f0", "#ffd166", "#ef6f9a", "#7bd88f", "#ff6b6b"
+# Tomada de la foto de perfil: azul noche, brillo cian de pantalla, lavanda y rubor rosado.
+BG, BG2, PANEL = "#091a25", "#0e2432", "#12374a"
+LINE, LINE_HI = "#265874", "#317898"
+TXT, DIM = "#e6f6fb", "#86b1d1"
+CYAN, GOLD, PINK, GREEN, RED = "#acedf9", "#c9b4e6", "#eba3bd", "#7fd6c2", "#eba3bd"
+SHADOW = "#06121a"
 
 
 # ── Datos ─────────────────────────────────────────────────────────────
@@ -218,37 +220,33 @@ def bar(x, y, w, frac, c, segs=None):
     return out
 
 
-# ── Héroe original: pequeño dragón que escupe código ──────────────────
-DRAGON = [
-    "............H..H....",
-    "............HHHH....",
-    "...........DDDDDD...",
-    "...........DDDWPDD..",
-    "...........DDDWWDDD.",
-    ".....s.s..DDDDDDDDDD",
-    "....DDDDDDDDDDDDDMMM",
-    "...DDDDDDDDDDDDDDDD.",
-    "..DDDDDDDDDYYDD.....",
-    "..DDDDDDDDYYYYD.....",
-    "..DDDDDDDYYYYYD.....",
-    "DDDDDDDDDDYYYYD.....",
-    "DD.DDDDDDDDYYD......",
-    "....DDDDDDDDDD......",
-    "....dd.....dd.......",
-    "....CC.....CC.......",
+# ── Héroe original: rey de ajedrez ────────────────────────────────────
+KING = [
+    ".......XX.......",
+    "......XXXX......",
+    ".......XX.......",
+    ".....CCCCCC.....",
+    "....CWWWWWWC....",
+    "....CWGWWGWC....",
+    "....CCCCCCCC....",
+    ".....WWWWWW.....",
+    "....WWWWWWWS....",
+    "....WEWWWEWS....",
+    "....WWWWWWWS....",
+    "....WPWWWPWS....",
+    ".....WWWWWS.....",
+    "......SSSS......",
+    ".....WWWWWS.....",
+    "....WWWWWWWS....",
+    "...WWWWWWWWWS...",
+    "...CCCCCCCCCC...",
+    "..WWWWWWWWWWWS..",
+    "..WWWWWWWWWWWS..",
+    ".SSSSSSSSSSSSSS.",
+    ".DDDDDDDDDDDDDD.",
 ]
-WING = [
-    "..WW....",
-    ".WWWW...",
-    "WWwwWW..",
-    "WwwwwWW.",
-    ".wwwwWW.",
-    "..wwww..",
-]
-DRAGON_COL = {"H": "#f5e6c8", "D": "#3fbf7f", "d": "#2a8a5c", "Y": GOLD, "W": "#ffffff",
-              "P": "#14102a", "M": "#1f6b43", "s": "#ef6f9a", "C": "#f5e6c8",
-              "w": "#5a3a9e"}
-WING_COL = {"W": "#8a5ad8", "w": "#5a3a9e"}
+KING_COL = {"X": "#f2dc9b", "C": GOLD, "W": "#eef6fb", "S": "#b7cde0", "D": "#5f80a4",
+            "G": PINK, "E": BG, "P": PINK}
 
 
 def sprite(rows, cols, x, y, s):
@@ -256,51 +254,43 @@ def sprite(rows, cols, x, y, s):
                    for j, r in enumerate(rows) for i, c in enumerate(r) if c != ".")
 
 
-def dragon(x, y, s):
-    """Dragón con alas que aletean y bloques de código saliendo de la boca."""
-    wing = (f'<g>{sprite(WING, WING_COL, x + 4 * s, y + 1 * s, s)}'
-            f'<animateTransform attributeName="transform" type="translate" values="0 0;0 -{s};0 0" '
-            f'dur=".5s" repeatCount="indefinite"/></g>')
-    body = sprite(DRAGON, DRAGON_COL, x, y, s)
-    mx, my = x + 20 * s, y + 6 * s  # boca
-    blocks = ""
-    for i, (label, c) in enumerate([("{}", CYAN), ("</>", GOLD), ("01", PINK), ("=>", GREEN)]):
-        bw = 10 + 8 * len(label)
-        box = (rect(0, 0, bw, 16, "#14102a") + rect(0, 0, bw, 2, c) + rect(0, 14, bw, 2, c)
-               + rect(0, 0, 2, 16, c) + rect(bw - 2, 0, 2, 16, c)
-               + text(5, 12, label, 8, c))
-        dy = [-30, -6, -44, -18][i]
-        blocks += (f'<g opacity="0" transform="translate({mx},{my - 8})">{box}'
-                   f'<animateTransform attributeName="transform" type="translate" '
-                   f'values="{mx},{my - 8};{mx + 88},{my - 8 + dy}" dur="2s" begin="{i * .5}s" repeatCount="indefinite"/>'
-                   f'<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.7;1" dur="2s" '
-                   f'begin="{i * .5}s" repeatCount="indefinite"/></g>')
-    return wing + body, blocks
+def king(x, y, s):
+    """Rey con halo de pantalla, parpadeo y destellos alrededor."""
+    glow = ""
+    body = sprite(KING, KING_COL, x, y, s)
+    blink = (f'<g opacity="0">{rect(x + 5 * s, y + 9 * s, s, s, "#eef6fb")}{rect(x + 9 * s, y + 9 * s, s, s, "#eef6fb")}'
+             f'<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.92;.95;1" dur="4s" repeatCount="indefinite"/></g>')
+    sparkles = ""
+    for i, (dx, dy, c) in enumerate([(-3, 6, CYAN), (18, 3, GOLD), (19, 13, PINK), (-4, 15, GOLD), (8, -3, CYAN)]):
+        sx, sy = x + dx * s, y + dy * s
+        star = (rect(sx + s // 2 - 2, sy, 4, s * 2, c) + rect(sx - s // 2, sy + s - 2, s * 2, 4, c))
+        sparkles += (f'<g opacity="0">{star}<animate attributeName="opacity" values="0;1;0" dur="2s" '
+                     f'begin="{i * .4:.1f}s" repeatCount="indefinite"/></g>')
+    return glow, body + blink, sparkles
 
 
 def banner(d):
     random.seed(20)
     S, W, H = 8, 105, 32
     o = []
-    bands = ["#1a1033", "#24164a", "#2f1d5e", "#3d2672", "#4e3087", "#6a3f97", "#8a4d9e", "#b05e9a"]
+    bands = ["#091a25", "#0e2432", "#102a39", "#12374a", "#204259", "#1f5274", "#265874", "#317898"]
     for i, c in enumerate(bands):
         o.append(rect(0, i * 3 * S, W * S, (H - i * 3) * S, c))
     for _ in range(45):
         x, y = random.randrange(W), random.randrange(0, 16)
         sz = S if random.random() < .4 else S // 2
-        o.append(f'<rect x="{x*S}" y="{y*S}" width="{sz}" height="{sz}" fill="#fff6c7">'
+        o.append(f'<rect x="{x*S}" y="{y*S}" width="{sz}" height="{sz}" fill="{CYAN}">'
                  f'<animate attributeName="opacity" values="1;.15;1" dur="{random.uniform(1.5,4):.1f}s" '
                  f'begin="{random.uniform(0,3):.1f}s" repeatCount="indefinite"/></rect>')
-    # luna
+    # luna con halo
     moon = ["..XXXX..", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."]
     for j, r in enumerate(moon):
         for i, c in enumerate(r):
             if c == "X":
-                o.append(rect((90 + i) * S, (3 + j) * S, S, S, "#ffe9a8" if (i * 3 + j) % 7 else "#f5d27a"))
-    # nubes que se mueven
+                o.append(rect((90 + i) * S, (3 + j) * S, S, S, "#e6f6fb" if (i * 3 + j) % 7 else "#acedf9"))
     for cx, cy, dur in [(10, 6, 60), (55, 10, 80)]:
-        cl = rect(cx * S, cy * S, 10 * S, S, "#7a5aa8") + rect((cx + 2) * S, (cy - 1) * S, 5 * S, S, "#7a5aa8")
-        o.append(f'<g opacity="0.6">{cl}<animateTransform attributeName="transform" type="translate" '
+        cl = rect(cx * S, cy * S, 10 * S, S, "#3f5d7e") + rect((cx + 2) * S, (cy - 1) * S, 5 * S, S, "#3f5d7e")
+        o.append(f'<g opacity="0.7">{cl}<animateTransform attributeName="transform" type="translate" '
                  f'values="0 0;{W*S} 0;0 0" dur="{dur}s" repeatCount="indefinite"/></g>')
 
     def mountains(base, peaks, col, shade):
@@ -312,28 +302,32 @@ def banner(d):
             if h[x] > 0:
                 o.append(rect(x * S, (base - h[x]) * S, S, h[x] * S, col))
                 o.append(rect(x * S, (base - h[x]) * S, S, S, shade))
-    mountains(26, [(8, 9, 1), (30, 11, 2), (52, 8, 1), (74, 12, 2), (98, 9, 1)], "#3b2a6b", "#5a4596")
-    mountains(28, [(0, 7, 1), (20, 8, 2), (45, 10, 2), (66, 7, 1), (90, 9, 2)], "#25194a", "#3a2a6e")
-    o.append(rect(0, 28 * S, W * S, S, "#49b06f") + rect(0, 29 * S, W * S, S, "#2e8b57") + rect(0, 30 * S, W * S, 2 * S, "#5a3a22"))
-    for x in range(0, W, 3):
-        o.append(rect(x * S, 28 * S, S, S, "#2e8b57"))
-    # dragón con animación de "respirar" + código que escupe
-    drg, code = dragon(4 * S, 12 * S, 8)
-    o.append(f'<g>{drg}<animateTransform attributeName="transform" type="translate" '
-             f'values="0 0;0 -4;0 0" dur="1.2s" repeatCount="indefinite"/></g>')
-    o.append(code)
+    mountains(26, [(8, 9, 1), (30, 11, 2), (52, 8, 1), (74, 12, 2), (98, 9, 1)], "#12374a", "#204259")
+    mountains(28, [(0, 7, 1), (20, 8, 2), (45, 10, 2), (66, 7, 1), (90, 9, 2)], "#0e2432", "#1f5274")
+    # suelo de tablero de ajedrez
+    for row in range(28, 32):
+        for col in range(0, W, 2):
+            light = ((col // 2) + row) % 2 == 0
+            o.append(rect(col * S, row * S, 2 * S, S, "#86b1d1" if light else "#204259"))
+    o.append(rect(0, 28 * S, W * S, 2, CYAN, ' opacity=".6"'))
+    glow, body, sparkles = king(10 * S, 6 * S, 8)
+    o.append(glow)
+    o.append(f'<g>{body}<animateTransform attributeName="transform" type="translate" '
+             f'values="0 0;0 -4;0 0" dur="1.6s" repeatCount="indefinite"/></g>')
+    o.append(sparkles)
     # títulos
-    o.append(rect(37 * S - 8, 10 * S - 4, 52 * S, 14 * S, "#14102a", ' opacity="0.55"'))
-    o.append(text(39 * S, 14 * S + 4, d["name"].upper()[:18], 28, "#14102a"))
+    o.append(rect(37 * S - 8, 10 * S - 4, 52 * S, 14 * S, SHADOW, ' opacity="0.6"'))
+    o.append(rect(37 * S - 8, 10 * S - 4, 52 * S, 2, CYAN, ' opacity=".5"'))
+    o.append(text(39 * S, 14 * S + 4, d["name"].upper()[:18], 28, SHADOW))
     o.append(text(39 * S - 3, 14 * S + 1, d["name"].upper()[:18], 28, GOLD))
     o.append(text(39 * S, 17 * S + 6, "BACKEND · GAME DEV", 12, CYAN))
     loc = d["location"] or "República Dominicana"
     pin = "".join(rect(39 * S + i * 2, 19 * S - 2 + j * 2, 2, 2, PINK) for j, r in enumerate(
         [".XXX.", "XX.XX", "XXXXX", ".XXX.", "..X.."]) for i, c in enumerate(r) if c == "X")
     o.append(pin + text(39 * S + 18, 19 * S + 8, fit(loc, 28), 10, TXT))
-    arrow = "".join(rect(39 * S + i * 2, 22 * S - 6 + j * 2, 2, 2, "#ffffff") for j, r in enumerate(
+    arrow = "".join(rect(39 * S + i * 2, 22 * S - 6 + j * 2, 2, 2, TXT) for j, r in enumerate(
         ["X...", "XX..", "XXX.", "XX..", "X..."]) for i, c in enumerate(r) if c == "X")
-    o.append(f'<g>{arrow}{text(39 * S + 16, 22 * S + 4, "PRESS START", 10, "#ffffff")}'
+    o.append(f'<g>{arrow}{text(39 * S + 16, 22 * S + 4, "PRESS START", 10, TXT)}'
              f'<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;.5;.5;1" dur="1s" repeatCount="indefinite"/></g>')
     return svg(W * S, H * S, "".join(o), f"Banner de {d['name']}")
 
@@ -409,7 +403,7 @@ def streak_card(d):
     cw = (w - 48) / 3
     for i, (v, label, c) in enumerate(cols):
         cx = 24 + cw * i + cw / 2
-        b += text(cx + 2, 92, v, 26, "#14102a", "middle") + text(cx, 90, v, 26, c, "middle")
+        b += text(cx + 2, 92, v, 26, SHADOW, "middle") + text(cx, 90, v, 26, c, "middle")
         b += text(cx, 116, label, 8, DIM, "middle")
         if i:
             b += rect(24 + cw * i, 58, 4, 70, LINE)
