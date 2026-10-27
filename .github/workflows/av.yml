@@ -1,5 +1,8 @@
 name: avatar-tmp
-on: workflow_dispatch
+on:
+  push:
+    branches: [avatar-tmp]
+    paths: [".github/workflows/av.yml"]
 jobs:
   a:
     runs-on: ubuntu-latest
