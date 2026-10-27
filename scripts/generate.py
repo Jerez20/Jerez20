@@ -30,6 +30,7 @@ query($login:String!){
   user(login:$login){
     login name bio location createdAt
     followers{totalCount}
+    privateRepos: repositories(ownerAffiliations:OWNER, privacy:PRIVATE){totalCount}
     repositories(ownerAffiliations:OWNER, first:100, orderBy:{field:PUSHED_AT, direction:DESC}){
       totalCount
       nodes{
@@ -41,6 +42,7 @@ query($login:String!){
     contributionsCollection{
       totalCommitContributions totalPullRequestContributions totalIssueContributions
       restrictedContributionsCount
+      commitContributionsByRepository(maxRepositories:100){ repository{ isPrivate } contributions{ totalCount } }
       contributionCalendar{ totalContributions weeks{ contributionDays{ date contributionCount } } }
     }
   }
@@ -143,6 +145,9 @@ def summarize(u):
         "prs": cc["totalPullRequestContributions"],
         "issues": cc["totalIssueContributions"],
         "private": cc["restrictedContributionsCount"],
+        "private_repos": u["privateRepos"]["totalCount"],
+        "private_contribs": sum(r["contributions"]["totalCount"] for r in cc["commitContributionsByRepository"]
+                                if r["repository"]["isPrivate"]) or cc["restrictedContributionsCount"],
         "year_total": year_total,
         "streak": cur,
         "longest": longest,
@@ -158,7 +163,7 @@ def summarize(u):
                 "pushed": r["pushedAt"][:10],
                 "private": r["isPrivate"],
             }
-            for r in [r for r in own if (SHOW_PRIVATE or not r["isPrivate"]) and r["name"].lower() != USER.lower()][:4]
+            for r in [r for r in own if (SHOW_PRIVATE or not r["isPrivate"]) and r["name"].lower() != USER.lower()][:3]
         ],
         "updated": dt.datetime.now(dt.timezone(dt.timedelta(hours=-4))).strftime("%d/%m/%Y %H:%M"),
     }
@@ -391,15 +396,16 @@ def langs_card(d):
 
 def quests_card(d):
     w = 840
-    h = 62 + 56 * max(1, len(d["quests"])) + 10
+    priv = d.get("private_repos", 0)
+    rows = len(d["quests"]) + (1 if priv else 0)
+    h = 62 + 56 * max(1, rows) + 10
     b = frame(w, h, "QUESTS RECIENTES", PINK)
     y = 62
     for q in d["quests"]:
         b += rect(24, y, w - 48, 46, BG2) + rect(24, y, 4, 46, q["color"])
         b += text(40, y + 19, fit(q["name"], 30), 11, GOLD)
-        tag = "PRIVADO" if q["private"] else "PÚBLICO"
-        b += text(w - 36, y + 19, f"{q['stars']}   {tag}", 8, DIM, "end")
-        sx = w - 36 - 8 * (len(f"{q['stars']}   {tag}")) - 12
+        b += text(w - 36, y + 19, f"{q['stars']}   PÚBLICO", 8, DIM, "end")
+        sx = w - 36 - 8 * (len(f"{q['stars']}   PUBLICO")) - 12
         b += "".join(rect(sx + i * 2, y + 9 + j * 2, 2, 2, GOLD) for j, r in enumerate(
             ["..X..", "XXXXX", ".XXX.", ".X.X."]) for i, c in enumerate(r) if c == "X")
         desc = q["desc"] or "Sin descripción"
@@ -408,6 +414,18 @@ def quests_card(d):
             b += rect(w - 260, y + 30, 8, 8, q["color"]) + text(w - 246, y + 38, fit(q["lang"], 10), 8, TXT)
         b += text(w - 36, y + 38, q["pushed"], 8, CYAN, "end")
         y += 56
+    if priv:
+        # resumen de repos privados: sin nombres, solo cantidades
+        b += rect(24, y, w - 48, 46, BG2) + rect(24, y, 4, 46, GOLD)
+        lock = "".join(rect(40 + i * 2, y + 9 + j * 2, 2, 2, GOLD) for j, r in enumerate(
+            [".XXX.", "X...X", "X...X", "XXXXX", "XX.XX", "XX.XX", "XXXXX"]) for i, c in enumerate(r) if c == "X")
+        label = f"{priv} {'REPOSITORIO PRIVADO' if priv == 1 else 'REPOSITORIOS PRIVADOS'}"
+        b += lock + text(56, y + 19, label, 11, GOLD)
+        pc = d.get("private_contribs", 0)
+        b += text(40, y + 37, f"{pc} contribuciones en el último año · código bajo llave", 8, TXT)
+        b += text(w - 36, y + 19, "PRIVADO", 8, DIM, "end")
+        if d.get("last_active"):
+            b += text(w - 36, y + 38, d["last_active"], 8, CYAN, "end")
     return svg(w, h, b, "Proyectos recientes")
 
 
