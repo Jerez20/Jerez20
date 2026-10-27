@@ -22,6 +22,10 @@ LINE, LINE_HI = "#265874", "#317898"
 TXT, DIM = "#e6f6fb", "#86b1d1"
 CYAN, GOLD, PINK, GREEN, RED = "#acedf9", "#c9b4e6", "#eba3bd", "#7fd6c2", "#eba3bd"
 SHADOW = "#06121a"
+LANG_COLORS = {"Python": "#3572A5", "TypeScript": "#3178c6", "HTML": "#e34c26", "JavaScript": "#f1e05a",
+               "TeX": "#3D6117", "Go": "#00ADD8", "C#": "#178600", "CSS": "#563d7c", "GDScript": "#355570",
+               "Shell": "#89e051", "Dockerfile": "#384d54", "Java": "#b07219", "Kotlin": "#A97BFF",
+               "Dart": "#00B4AB", "PHP": "#4F5D95", "C++": "#f34b7d", "PowerShell": "#012456"}
 
 
 # ── Datos ─────────────────────────────────────────────────────────────
@@ -94,6 +98,12 @@ def scrape_calendar(login):
     return {"days": days, "total": int(total.group(1).replace(",", "")) if total else sum(d["contributionCount"] for d in days)}
 
 
+def load_snapshot():
+    """Datos de repos privados calculados aparte (cuando no hay PROFILE_TOKEN)."""
+    f = Path(__file__).with_name("private_snapshot.json")
+    return json.loads(f.read_text()) if f.exists() else None
+
+
 def summarize(u):
     repos = u["repositories"]["nodes"]
     own = sorted([r for r in repos if not r["isFork"]], key=lambda r: r["pushedAt"] or "", reverse=True)
@@ -103,6 +113,11 @@ def summarize(u):
             n = e["node"]["name"]
             langs.setdefault(n, [0, e["node"]["color"] or DIM])
             langs[n][0] += e["size"]
+    snap = load_snapshot() if u["privateRepos"]["totalCount"] == 0 else None
+    if snap:
+        for n, size in snap["languages"].items():
+            langs.setdefault(n, [0, LANG_COLORS.get(n, DIM)])
+            langs[n][0] += size
     total = sum(v[0] for v in langs.values()) or 1
     top = sorted(langs.items(), key=lambda kv: -kv[1][0])[:6]
 
@@ -114,6 +129,17 @@ def summarize(u):
         if cal:
             days, year_total = cal["days"], cal["total"]
             print(f"Calendario público: {year_total} contribuciones")
+    if snap:
+        merged = {d["date"]: d["contributionCount"] for d in days}
+        for day, n in snap["days"].items():
+            merged[day] = max(merged.get(day, 0), n)
+        cutoff = (dt.date.today() - dt.timedelta(days=365)).isoformat()
+        today = dt.date.today()
+        start = today - dt.timedelta(days=365)
+        days = [{"date": (start + dt.timedelta(days=i)).isoformat(),
+                 "contributionCount": merged.get((start + dt.timedelta(days=i)).isoformat(), 0)}
+                for i in range(366)]
+        year_total = max(year_total, sum(v for k, v in merged.items() if k >= cutoff))
     days.sort(key=lambda d: d["date"])
     longest = run = 0
     for d in days:
@@ -139,15 +165,17 @@ def summarize(u):
         "since": created.year,
         "years": years,
         "followers": u["followers"]["totalCount"],
-        "repos": u["repositories"]["totalCount"],
+        "repos": u["repositories"]["totalCount"] + (snap["private_repos"] if snap else 0),
         "stars": sum(r["stargazerCount"] for r in own),
-        "commits": cc["totalCommitContributions"] or year_total - cc["totalPullRequestContributions"] - cc["totalIssueContributions"],
+        "commits": max(cc["totalCommitContributions"] + (snap["private_commits"] if snap else 0),
+                       year_total - cc["totalPullRequestContributions"] - cc["totalIssueContributions"]),
         "prs": cc["totalPullRequestContributions"],
         "issues": cc["totalIssueContributions"],
         "private": cc["restrictedContributionsCount"],
-        "private_repos": u["privateRepos"]["totalCount"],
+        "private_repos": u["privateRepos"]["totalCount"] or (snap["private_repos"] if snap else 0),
         "private_contribs": sum(r["contributions"]["totalCount"] for r in cc["commitContributionsByRepository"]
-                                if r["repository"]["isPrivate"]) or cc["restrictedContributionsCount"],
+                                if r["repository"]["isPrivate"]) or cc["restrictedContributionsCount"]
+                            or (snap["private_commits"] if snap else 0),
         "year_total": year_total,
         "streak": cur,
         "longest": longest,
