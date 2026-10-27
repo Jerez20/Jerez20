@@ -220,53 +220,70 @@ def bar(x, y, w, frac, c, segs=None):
     return out
 
 
-# ── Héroe original: rey de ajedrez ────────────────────────────────────
-KING = [
-    ".......XX.......",
-    "......XXXX......",
-    ".......XX.......",
-    ".....CCCCCC.....",
-    "....CWWWWWWC....",
-    "....CWGWWGWC....",
-    "....CCCCCCCC....",
-    ".....WWWWWW.....",
-    "....WWWWWWWS....",
-    "....WEWWWEWS....",
-    "....WWWWWWWS....",
-    "....WPWWWPWS....",
-    ".....WWWWWS.....",
-    "......SSSS......",
-    ".....WWWWWS.....",
-    "....WWWWWWWS....",
-    "...WWWWWWWWWS...",
-    "...CCCCCCCCCC...",
-    "..WWWWWWWWWWWS..",
-    "..WWWWWWWWWWWS..",
-    ".SSSSSSSSSSSSSS.",
-    ".DDDDDDDDDDDDDD.",
+# ── Héroe: caballo negro de ajedrez ───────────────────────────────────
+KNIGHT = [
+    ".........XX.........",
+    "........XXX..X......",
+    ".......XXXXXXXX.....",
+    "......XXXXXXXXXX....",
+    ".....XXXXXXXXXXXX...",
+    "....XXXEXXXXXXXXXX..",
+    "...XXXXXXXXXXXXXXXX.",
+    "..XXXXXXXXXXXXXXXXX.",
+    ".XXXXXXXXXXXXXXXXXX.",
+    "XXXXXXXXXXXXXXXXXXXX",
+    "XNXXXXXXXXXXXXXXXXXX",
+    ".XXXXX..XXXXXXXXXXXX",
+    "..XX....XXXXXXXXXXXX",
+    ".......XXXXXXXXXXXX.",
+    "......XXXXXXXXXXXXX.",
+    ".....XXXXXXXXXXXXX..",
+    ".....XXXXXXXXXXXXX..",
+    "....XXXXXXXXXXXXXX..",
+    "...BBBBBBBBBBBBBBBB.",
+    "...XXXXXXXXXXXXXXXX.",
+    "..XXXXXXXXXXXXXXXXXX",
+    ".BBBBBBBBBBBBBBBBBBB",
+    ".XXXXXXXXXXXXXXXXXXX",
 ]
-KING_COL = {"X": "#f2dc9b", "C": GOLD, "W": "#eef6fb", "S": "#b7cde0", "D": "#5f80a4",
-            "G": PINK, "E": BG, "P": PINK}
+# Pieza negra con luz de pantalla: cuerpo casi negro, borde cian a la izquierda y arriba, sombra lavanda a la derecha.
+PIECE, PIECE_MID, RIM, RIM_SOFT, BACK = "#141d27", "#1d2a38", CYAN, "#5fa9c4", "#3b3550"
 
 
-def sprite(rows, cols, x, y, s):
-    return "".join(rect(x + i * s, y + j * s, s, s, cols[c])
-                   for j, r in enumerate(rows) for i, c in enumerate(r) if c != ".")
-
-
-def king(x, y, s):
-    """Rey con halo de pantalla, parpadeo y destellos alrededor."""
-    glow = ""
-    body = sprite(KING, KING_COL, x, y, s)
-    blink = (f'<g opacity="0">{rect(x + 5 * s, y + 9 * s, s, s, "#eef6fb")}{rect(x + 9 * s, y + 9 * s, s, s, "#eef6fb")}'
-             f'<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.92;.95;1" dur="4s" repeatCount="indefinite"/></g>')
+def knight(x, y, s):
+    rows = KNIGHT
+    h, w = len(rows), len(rows[0])
+    get = lambda i, j: 0 <= j < h and 0 <= i < w and rows[j][i] in "XBEN"
+    out = ""
+    for j, r in enumerate(rows):
+        for i, c in enumerate(r):
+            if c == ".":
+                continue
+            if c == "E":
+                col = RIM
+            elif not get(i - 1, j) or not get(i, j - 1):
+                col = RIM
+            elif c == "N":
+                col = SHADOW
+            elif not get(i + 1, j):
+                col = BACK
+            elif c == "B":
+                col = PIECE_MID
+            else:
+                col = PIECE
+            out += rect(x + i * s, y + j * s, s, s, col)
+    # crin: muescas en la espalda
+    for j in (3, 5, 7, 9, 11):
+        mi = max(i for i, c in enumerate(rows[j]) if c != ".")
+        out += rect(x + (mi - 1) * s, y + j * s, s, s, RIM_SOFT)
     sparkles = ""
-    for i, (dx, dy, c) in enumerate([(-3, 6, CYAN), (18, 3, GOLD), (19, 13, PINK), (-4, 15, GOLD), (8, -3, CYAN)]):
+    for i, (dx, dy, c) in enumerate([(-3, 4, CYAN), (21, 2, GOLD), (22, 12, PINK), (-3, 16, GOLD), (11, -3, CYAN)]):
         sx, sy = x + dx * s, y + dy * s
-        star = (rect(sx + s // 2 - 2, sy, 4, s * 2, c) + rect(sx - s // 2, sy + s - 2, s * 2, 4, c))
+        star = rect(sx + s // 2 - 2, sy, 4, s * 2, c) + rect(sx - s // 2, sy + s - 2, s * 2, 4, c)
         sparkles += (f'<g opacity="0">{star}<animate attributeName="opacity" values="0;1;0" dur="2s" '
                      f'begin="{i * .4:.1f}s" repeatCount="indefinite"/></g>')
-    return glow, body + blink, sparkles
+    shadow = rect(x, y + (h - 1) * s + s, w * s, s // 2, SHADOW, ' opacity=".6"')
+    return shadow, out, sparkles
 
 
 def banner(d):
@@ -310,10 +327,10 @@ def banner(d):
             light = ((col // 2) + row) % 2 == 0
             o.append(rect(col * S, row * S, 2 * S, S, "#86b1d1" if light else "#204259"))
     o.append(rect(0, 28 * S, W * S, 2, CYAN, ' opacity=".6"'))
-    glow, body, sparkles = king(10 * S, 6 * S, 8)
+    glow, body, sparkles = knight(9 * S, 5 * S, 8)
     o.append(glow)
     o.append(f'<g>{body}<animateTransform attributeName="transform" type="translate" '
-             f'values="0 0;0 -4;0 0" dur="1.6s" repeatCount="indefinite"/></g>')
+             f'values="0 0;0 -3;0 0" dur="2s" repeatCount="indefinite"/></g>')
     o.append(sparkles)
     # títulos
     o.append(rect(37 * S - 8, 10 * S - 4, 52 * S, 14 * S, SHADOW, ' opacity="0.6"'))
