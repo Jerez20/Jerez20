@@ -184,37 +184,64 @@ def bar(x, y, w, frac, c, segs=None):
     return out
 
 
-# ── Héroe original: pequeño caballero con bufanda ─────────────────────
-HERO = [
-    ".....HHHHHH.....",
-    "....HHHHHHHH....",
-    "...HHhhhhhhHH...",
-    "...HVVVVVVVVH...",
-    "...HVEVVVVEVH...",
-    "...HVVVVVVVVH...",
-    "....HHHHHHHH....",
-    "...SSSSSSSSSSS..",
-    "..SBBBBBBBBSSS..",
-    ".SwBBBBBBBBs....",
-    ".SwBBGGGGBBs....",
-    "..wBBBBBBBB.....",
-    "...BBBBBBBB.....",
-    "...LL....LL.....",
-    "..KKK....KKK....",
-    "................",
+# ── Héroe original: pequeño dragón que escupe código ──────────────────
+DRAGON = [
+    "............H..H....",
+    "............HHHH....",
+    "...........DDDDDD...",
+    "...........DDDWPDD..",
+    "...........DDDWWDDD.",
+    ".....s.s..DDDDDDDDDD",
+    "....DDDDDDDDDDDDDMMM",
+    "...DDDDDDDDDDDDDDDD.",
+    "..DDDDDDDDDYYDD.....",
+    "..DDDDDDDDYYYYD.....",
+    "..DDDDDDDYYYYYD.....",
+    "DDDDDDDDDDYYYYD.....",
+    "DD.DDDDDDDDYYD......",
+    "....DDDDDDDDDD......",
+    "....dd.....dd.......",
+    "....CC.....CC.......",
 ]
-HERO_COL = {"H": "#c9d1e8", "h": "#ffffff", "V": "#14102a", "E": CYAN, "S": "#ff8c42",
-            "s": "#d9622b", "B": "#3a6fd8", "G": GOLD, "L": "#2a2a52", "K": "#5a3a22",
-            "w": "#8a5a3c"}
-SWORD = ["..X", ".XX", "XXX", "XX.", "Y..", "Y.."]
+WING = [
+    "..WW....",
+    ".WWWW...",
+    "WWwwWW..",
+    "WwwwwWW.",
+    ".wwwwWW.",
+    "..wwww..",
+]
+DRAGON_COL = {"H": "#f5e6c8", "D": "#3fbf7f", "d": "#2a8a5c", "Y": GOLD, "W": "#ffffff",
+              "P": "#14102a", "M": "#1f6b43", "s": "#ef6f9a", "C": "#f5e6c8",
+              "w": "#5a3a9e"}
+WING_COL = {"W": "#8a5ad8", "w": "#5a3a9e"}
 
 
-def hero(x, y, s):
-    g = "".join(rect(x + i * s, y + j * s, s, s, HERO_COL[c])
-                for j, row in enumerate(HERO) for i, c in enumerate(row) if c != ".")
-    g += "".join(rect(x + (13 + i) * s, y + (4 + j) * s, s, s, "#e8eefc" if c == "X" else "#8a5a3c")
-                 for j, row in enumerate(SWORD) for i, c in enumerate(row) if c != ".")
-    return g
+def sprite(rows, cols, x, y, s):
+    return "".join(rect(x + i * s, y + j * s, s, s, cols[c])
+                   for j, r in enumerate(rows) for i, c in enumerate(r) if c != ".")
+
+
+def dragon(x, y, s):
+    """Dragón con alas que aletean y bloques de código saliendo de la boca."""
+    wing = (f'<g>{sprite(WING, WING_COL, x + 4 * s, y + 1 * s, s)}'
+            f'<animateTransform attributeName="transform" type="translate" values="0 0;0 -{s};0 0" '
+            f'dur=".5s" repeatCount="indefinite"/></g>')
+    body = sprite(DRAGON, DRAGON_COL, x, y, s)
+    mx, my = x + 20 * s, y + 6 * s  # boca
+    blocks = ""
+    for i, (label, c) in enumerate([("{}", CYAN), ("</>", GOLD), ("01", PINK), ("=>", GREEN)]):
+        bw = 10 + 8 * len(label)
+        box = (rect(0, 0, bw, 16, "#14102a") + rect(0, 0, bw, 2, c) + rect(0, 14, bw, 2, c)
+               + rect(0, 0, 2, 16, c) + rect(bw - 2, 0, 2, 16, c)
+               + text(5, 12, label, 8, c))
+        dy = [-30, -6, -44, -18][i]
+        blocks += (f'<g opacity="0" transform="translate({mx},{my - 8})">{box}'
+                   f'<animateTransform attributeName="transform" type="translate" '
+                   f'values="{mx},{my - 8};{mx + 88},{my - 8 + dy}" dur="2s" begin="{i * .5}s" repeatCount="indefinite"/>'
+                   f'<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.7;1" dur="2s" '
+                   f'begin="{i * .5}s" repeatCount="indefinite"/></g>')
+    return wing + body, blocks
 
 
 def banner(d):
@@ -256,24 +283,23 @@ def banner(d):
     o.append(rect(0, 28 * S, W * S, S, "#49b06f") + rect(0, 29 * S, W * S, S, "#2e8b57") + rect(0, 30 * S, W * S, 2 * S, "#5a3a22"))
     for x in range(0, W, 3):
         o.append(rect(x * S, 28 * S, S, S, "#2e8b57"))
-    # héroe con animación de "respirar"
-    o.append(f'<g>{hero(8 * S, 12 * S, 8)}<animateTransform attributeName="transform" type="translate" '
-             f'values="0 0;0 -6;0 0" dur="1.2s" repeatCount="indefinite"/></g>')
-    # cofre
-    chest = rect(26 * S, 25 * S, 5 * S, 3 * S, "#8a5a3c") + rect(26 * S, 25 * S, 5 * S, S, "#b07a4a") + rect(28 * S, 26 * S, S, S, GOLD)
-    o.append(chest)
+    # dragón con animación de "respirar" + código que escupe
+    drg, code = dragon(4 * S, 12 * S, 8)
+    o.append(f'<g>{drg}<animateTransform attributeName="transform" type="translate" '
+             f'values="0 0;0 -4;0 0" dur="1.2s" repeatCount="indefinite"/></g>')
+    o.append(code)
     # títulos
-    o.append(rect(34 * S - 8, 10 * S - 4, 52 * S, 14 * S, "#14102a", ' opacity="0.55"'))
-    o.append(text(36 * S, 14 * S + 4, d["name"].upper()[:18], 28, "#14102a"))
-    o.append(text(36 * S - 3, 14 * S + 1, d["name"].upper()[:18], 28, GOLD))
-    o.append(text(36 * S, 17 * S + 6, "BACKEND · GAME DEV", 12, CYAN))
+    o.append(rect(37 * S - 8, 10 * S - 4, 52 * S, 14 * S, "#14102a", ' opacity="0.55"'))
+    o.append(text(39 * S, 14 * S + 4, d["name"].upper()[:18], 28, "#14102a"))
+    o.append(text(39 * S - 3, 14 * S + 1, d["name"].upper()[:18], 28, GOLD))
+    o.append(text(39 * S, 17 * S + 6, "BACKEND · GAME DEV", 12, CYAN))
     loc = d["location"] or "República Dominicana"
-    pin = "".join(rect(36 * S + i * 2, 19 * S - 2 + j * 2, 2, 2, PINK) for j, r in enumerate(
+    pin = "".join(rect(39 * S + i * 2, 19 * S - 2 + j * 2, 2, 2, PINK) for j, r in enumerate(
         [".XXX.", "XX.XX", "XXXXX", ".XXX.", "..X.."]) for i, c in enumerate(r) if c == "X")
-    o.append(pin + text(36 * S + 18, 19 * S + 8, fit(loc, 30), 10, TXT))
-    arrow = "".join(rect(36 * S + i * 2, 22 * S - 6 + j * 2, 2, 2, "#ffffff") for j, r in enumerate(
+    o.append(pin + text(39 * S + 18, 19 * S + 8, fit(loc, 28), 10, TXT))
+    arrow = "".join(rect(39 * S + i * 2, 22 * S - 6 + j * 2, 2, 2, "#ffffff") for j, r in enumerate(
         ["X...", "XX..", "XXX.", "XX..", "X..."]) for i, c in enumerate(r) if c == "X")
-    o.append(f'<g>{arrow}{text(36 * S + 16, 22 * S + 4, "PRESS START", 10, "#ffffff")}'
+    o.append(f'<g>{arrow}{text(39 * S + 16, 22 * S + 4, "PRESS START", 10, "#ffffff")}'
              f'<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;.5;.5;1" dur="1s" repeatCount="indefinite"/></g>')
     return svg(W * S, H * S, "".join(o), f"Banner de {d['name']}")
 
