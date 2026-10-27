@@ -36,7 +36,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # versión en la URL de cada imagen para que GitHub no muestre la copia vieja en caché
           V=$(date +%s)
-          sed -i -E "s#\./assets/(banner|stats|langs|quests|streak)\.svg(\?v=[0-9]+)?#./assets/\1.svg?v=$V#g" README.md
+          sed -i -E "s#\./assets/(banner|stats|langs|quests|streak|boss)\.svg(\?v=[0-9]+)?#./assets/\1.svg?v=$V#g" README.md
           git add assets/*.svg
           git diff --cached --quiet || git add README.md
           git diff --cached --quiet || git commit -m "Actualizar tarjetas del perfil"

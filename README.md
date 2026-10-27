@@ -25,13 +25,8 @@
   <img src="https://skillicons.dev/icons?i=go,python,js,html,css,react,firebase,git,github,vscode&perline=10" alt="Tecnologías" />
 </p>
 
-<h3 align="center">🐍 BOSS FIGHT</h3>
-
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Jerez20/Jerez20/output/github-snake-dark.svg" />
-    <img src="https://raw.githubusercontent.com/Jerez20/Jerez20/output/github-snake.svg" width="99%" alt="Serpiente comiéndose las contribuciones" />
-  </picture>
+  <img src="./assets/boss.svg?v=1793139010" width="99%" alt="El caballo negro se come las contribuciones" />
 </p>
 
 <p align="center">

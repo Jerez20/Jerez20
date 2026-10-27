@@ -180,6 +180,7 @@ def summarize(u):
         "streak": cur,
         "longest": longest,
         "last_active": last_active,
+        "days": [(d["date"], d["contributionCount"]) for d in days[-371:]],
         "langs": [(n, v[1], v[0] / total) for n, (v) in top],
         "quests": [
             {
@@ -476,6 +477,72 @@ def streak_card(d):
     return svg(w, h, b, "Racha de contribuciones")
 
 
+def boss_card(d):
+    """Calendario de contribuciones: el caballo negro recorre cada semana y se come los días con actividad."""
+    days = d.get("days") or []
+    if not days:
+        return None
+    start = dt.date.fromisoformat(days[0][0])
+    pad = (start.weekday() + 1) % 7  # columnas empiezan en domingo
+    cells = [None] * pad + days
+    cols = (len(cells) + 6) // 7
+    cs, gap = 12, 3
+    gx, gy = 24, 70
+    w = 840
+    h = gy + 7 * (cs + gap) + 44
+    mx = max([n for _, n in days] + [1])
+    levels = [BG2, "#1f5274", "#317898", "#86b1d1", CYAN]
+
+    def lvl(n):
+        if n <= 0:
+            return 0
+        return min(4, 1 + int(3 * n / mx))
+
+    # recorrido en zigzag: baja en columnas pares, sube en impares
+    path = []
+    for c in range(cols):
+        rows = range(7) if c % 2 == 0 else range(6, -1, -1)
+        for r in rows:
+            i = c * 7 + r
+            if i < len(cells):
+                path.append((c, r, i))
+    step = 0.06
+    T = len(path) * step + 2.0
+    order = {i: k for k, (_, _, i) in enumerate(path)}
+    b = frame(w, h, "BOSS FIGHT · EL CABALLO SE COME MIS COMMITS", RED)
+    total = sum(n for _, n in days)
+    b += text(w - 24, 30, f"{total} DERROTADOS", 8, DIM, "end")
+    for idx, cell in enumerate(cells):
+        c, r = idx // 7, idx % 7
+        x, y = gx + c * (cs + gap), gy + r * (cs + gap)
+        b += rect(x, y, cs, cs, BG2)
+        if cell and cell[1] > 0:
+            t = order.get(idx, 0) * step / T
+            col = levels[lvl(cell[1])]
+            b += (f'<rect x="{x}" y="{y}" width="{cs}" height="{cs}" fill="{col}">'
+                  f'<animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;{t:.4f};{min(t + .002, .97):.4f};.98;1" '
+                  f'dur="{T:.1f}s" repeatCount="indefinite"/></rect>')
+    # caballo mini (8x8) que sigue el recorrido
+    mini = ["..XX....", ".XXXX...", "XXEXXX..", "XXXXXXX.", "XX.XXXXX", "...XXXX.", "..XXXXX.", ".XXXXXXX"]
+    knight_svg = "".join(rect(i * 2, j * 2, 2, 2, CYAN if c == "E" else ("#eef6fb" if j == 0 or i == 0 else "#141d27"))
+                         for j, r in enumerate(mini) for i, c in enumerate(r) if c != ".")
+    knight_svg = rect(-2, -2, 20, 20, SHADOW, ' opacity=".0"') + "".join(
+        rect(i * 2 - 1, j * 2 - 1, 4, 4, CYAN) for j, r in enumerate(mini) for i, c in enumerate(r) if c != ".") + knight_svg
+    vals = ";".join(f"{gx + c * (cs + gap) - 2},{gy + r * (cs + gap) - 2}" for c, r, _ in path)
+    vals += f";{gx + path[-1][0] * (cs + gap) - 2},{gy + path[-1][1] * (cs + gap) - 2}"
+    kt = ";".join(f"{k * step / T:.4f}" for k in range(len(path))) + ";1"
+    b += (f'<g>{knight_svg}<animateTransform attributeName="transform" type="translate" calcMode="discrete" '
+          f'values="{vals}" keyTimes="{kt}" dur="{T:.1f}s" repeatCount="indefinite"/></g>')
+    # leyenda
+    ly = h - 20
+    b += text(gx, ly + 9, "MENOS", 7, DIM)
+    for i, c in enumerate(levels):
+        b += rect(gx + 52 + i * 16, ly, 12, 12, c)
+    b += text(gx + 52 + 5 * 16 + 4, ly + 9, "MAS", 7, DIM)
+    b += text(w - 24, ly + 9, "INCLUYE REPOS PRIVADOS", 7, DIM, "end")
+    return svg(w, h, b, "Calendario de contribuciones")
+
+
 def main():
     if len(sys.argv) > 2 and sys.argv[1] == "--mock":
         d = json.loads(Path(sys.argv[2]).read_text())
@@ -483,10 +550,11 @@ def main():
     else:
         d = summarize(fetch())
     files = {"banner.svg": banner(d), "stats.svg": stats_card(d), "langs.svg": langs_card(d),
-             "quests.svg": quests_card(d), "streak.svg": streak_card(d)}
+             "quests.svg": quests_card(d), "streak.svg": streak_card(d), "boss.svg": boss_card(d)}
     for n, s in files.items():
-        (OUT / n).write_text(s, encoding="utf-8")
-    print(json.dumps({k: v for k, v in d.items() if k not in ("langs", "quests")}, ensure_ascii=False))
+        if s:
+            (OUT / n).write_text(s, encoding="utf-8")
+    print(json.dumps({k: v for k, v in d.items() if k not in ("langs", "quests", "days")}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
