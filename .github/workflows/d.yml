@@ -1,0 +1,25 @@
+name: diag-tmp
+on:
+  push:
+    branches: [diag-tmp]
+    paths: [".github/workflows/d.yml"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: diag-tmp}
+      - run: |
+          curl -sL -A Mozilla/5.0 "https://github.com/users/${{ github.repository_owner }}/contributions" > c.html
+          python3 - <<'P' > diag.txt
+          import re
+          h=open('c.html').read()
+          print('total:', re.sub(r'\s+',' ',(re.search(r'[\d,]+\s+contributions?\s+in the last year',h) or re.search(r'x',h) or type('',(),{'group':lambda s,i:'none'})()).group(0)))
+          tips=re.findall(r'<tool-tip[^>]*>\s*([^<]*)</tool-tip>',h)
+          nz=[t for t in tips if not t.strip().startswith('No ')]
+          print('tips',len(tips),'nonzero',len(nz)); print(nz[-5:])
+          print('private' in h.lower(), 'restricted' in h.lower())
+          P
+          git config user.name pixel-bot; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add diag.txt; git commit -m d; git push
