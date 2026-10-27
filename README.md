@@ -1,57 +1,42 @@
 <div align="center">
 
-<img src="./assets/banner.svg" width="100%" alt="Banner pixel art" />
+<img src="./assets/banner.svg" width="100%" alt="Banner pixel art de Jerez20" />
 
-<img src="https://readme-typing-svg.demolab.com?font=Press+Start+2P&size=18&duration=3000&pause=800&color=4CC9F0&center=true&vCenter=true&width=700&lines=%E2%96%B6+PLAYER+1+READY;HOLA%2C+SOY+JEREZ;BACKEND+%2B+GAME+DEV;PRESS+START+TO+CONTINUE..." alt="Texto animado" />
+<img src="https://readme-typing-svg.demolab.com?font=Press+Start+2P&size=14&duration=2800&pause=900&color=4CC9F0&center=true&vCenter=true&width=840&lines=%E2%96%B6+PLAYER+1+READY;BACKEND+EN+GO+Y+PYTHON;CREANDO+JUEGOS%3A+CHESSRPG+%2B+RUNNER;PRESS+START+TO+CONTINUE..." alt="Texto animado" />
 
 </div>
 
----
-
-### ▶ `PLAYER_STATS.exe`
-
-```txt
-╔════════════════════════════════════════╗
-║  JUGADOR : Jerez20                     ║
-║  CLASE   : Backend Dev / Game Dev      ║
-║  NIVEL   : ██████████░░░░              ║
-║  BASE    : República Dominicana        ║
-║  QUEST   : ChessRPG · Runner · APIs    ║
-║  ITEM    : Café infinito               ║
-╚════════════════════════════════════════╝
-```
-
-### 🎒 `INVENTARIO`
-
-<p align="left">
-  <img src="https://skillicons.dev/icons?i=go,python,js,html,css,react,firebase,git,github,vscode&perline=10" alt="Habilidades" />
+<p align="center">
+  <img src="./assets/stats.svg" width="49%" alt="Estadísticas" />
+  <img src="./assets/langs.svg" width="49%" alt="Lenguajes" />
 </p>
 
-### 🕹️ `HIGH SCORES`
+<p align="center">
+  <img src="./assets/quests.svg" width="99%" alt="Proyectos recientes" />
+</p>
 
-<div align="center">
-  <img height="165" src="https://github-readme-stats.vercel.app/api?username=Jerez20&show_icons=true&hide_border=true&bg_color=1a1033&title_color=ffd166&icon_color=4cc9f0&text_color=e8e0ff&border_radius=0" alt="Estadísticas" />
-  <img height="165" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Jerez20&layout=compact&hide_border=true&bg_color=1a1033&title_color=ffd166&text_color=e8e0ff&border_radius=0" alt="Lenguajes" />
-</div>
+<p align="center">
+  <img src="./assets/streak.svg" width="99%" alt="Racha de contribuciones" />
+</p>
 
-<div align="center">
-  <img src="https://streak-stats.demolab.com?user=Jerez20&hide_border=true&background=1A1033&ring=4CC9F0&fire=FFD166&currStreakLabel=FFD166&sideLabels=E8E0FF&currStreakNum=FFFFFF&sideNums=FFFFFF&dates=9B8FC9&border_radius=0" alt="Racha" />
-</div>
+<h3 align="center">🎒 EQUIPO</h3>
 
-### 🐍 `BOSS FIGHT: la serpiente se come mis contribuciones`
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=go,python,js,html,css,react,firebase,git,github,vscode&perline=10" alt="Tecnologías" />
+</p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Jerez20/Jerez20/output/github-snake-dark.svg" />
-  <img src="https://raw.githubusercontent.com/Jerez20/Jerez20/output/github-snake.svg" alt="Serpiente de contribuciones" />
-</picture>
+<h3 align="center">🐍 BOSS FIGHT</h3>
 
----
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Jerez20/Jerez20/output/github-snake-dark.svg" />
+    <img src="https://raw.githubusercontent.com/Jerez20/Jerez20/output/github-snake.svg" width="99%" alt="Serpiente comiéndose las contribuciones" />
+  </picture>
+</p>
 
-<div align="center">
+<p align="center">
+  <img src="https://img.shields.io/badge/GAME-CONTINUE%3F-ffd166?style=for-the-badge&labelColor=1a1033" />
+  <img src="https://img.shields.io/badge/INSERT-COIN-4cc9f0?style=for-the-badge&labelColor=1a1033" />
+</p>
 
-<img src="https://img.shields.io/badge/GAME-OVER%3F-ffd166?style=for-the-badge&labelColor=1a1033" />
-<img src="https://img.shields.io/badge/INSERT-COIN-4cc9f0?style=for-the-badge&labelColor=1a1033" />
-
-`© 2026 · Hecho con 🟦 píxeles`
-
-</div>
+<p align="center"><sub>Tarjetas generadas a diario desde la API de GitHub · fuente Press Start 2P (OFL)</sub></p>
