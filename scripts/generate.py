@@ -85,11 +85,6 @@ def scrape_calendar(login):
             cnt = int(lvl.group(1)) if lvl else 0
         days.append({"date": m.group(1), "contributionCount": cnt})
     total = re.search(r"([\d,]+)\s+contributions?\s+in the last year", html)
-    (OUT / "debug.json").write_text(json.dumps({
-        "html_len": len(html), "days": len(days), "tips": len(tips),
-        "nonzero": [d for d in days if d["contributionCount"]][-5:],
-        "total_match": total.group(0) if total else None,
-        "snippet": html[html.find("<td"):html.find("<td") + 400]}, indent=1))
     if not days:
         return None
     return {"days": days, "total": int(total.group(1).replace(",", "")) if total else sum(d["contributionCount"] for d in days)}
