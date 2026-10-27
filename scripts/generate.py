@@ -63,7 +63,7 @@ def fetch():
 
 def summarize(u):
     repos = u["repositories"]["nodes"]
-    own = [r for r in repos if not r["isFork"]]
+    own = sorted([r for r in repos if not r["isFork"]], key=lambda r: r["pushedAt"] or "", reverse=True)
     langs = {}
     for r in own:
         for e in r["languages"]["edges"]:
