@@ -122,7 +122,7 @@ def summarize(u):
                 "pushed": r["pushedAt"][:10],
                 "private": r["isPrivate"],
             }
-            for r in [r for r in own if SHOW_PRIVATE or not r["isPrivate"]][:4]
+            for r in [r for r in own if (SHOW_PRIVATE or not r["isPrivate"]) and r["name"].lower() != USER.lower()][:4]
         ],
         "updated": dt.datetime.now(dt.timezone(dt.timedelta(hours=-4))).strftime("%d/%m/%Y %H:%M"),
     }
@@ -334,7 +334,7 @@ def quests_card(d):
         desc = q["desc"] or "Sin descripción"
         b += text(40, y + 37, fit(desc, 58), 8, TXT)
         if q["lang"]:
-            b += rect(w - 210, y + 30, 8, 8, q["color"]) + text(w - 196, y + 38, fit(q["lang"], 10), 8, TXT)
+            b += rect(w - 260, y + 30, 8, 8, q["color"]) + text(w - 246, y + 38, fit(q["lang"], 10), 8, TXT)
         b += text(w - 36, y + 38, q["pushed"], 8, CYAN, "end")
         y += 56
     return svg(w, h, b, "Proyectos recientes")
