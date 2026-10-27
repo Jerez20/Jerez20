@@ -2,7 +2,7 @@ name: Actualizar tarjetas pixel art
 
 on:
   schedule:
-    - cron: "17 10 * * *"   # todos los días, 6:17 a. m. en Santo Domingo
+    - cron: "17 */6 * * *"   # cada 6 horas
   workflow_dispatch:
   push:
     branches: [main]
