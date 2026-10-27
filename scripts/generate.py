@@ -61,6 +61,35 @@ def fetch():
     return data["data"]["user"]
 
 
+def scrape_calendar(login):
+    """Respaldo: lee el calendario público (incluye privadas si el perfil lo permite)."""
+    import re
+    req = urllib.request.Request(f"https://github.com/users/{login}/contributions",
+                                 headers={"User-Agent": "pixel-profile"})
+    try:
+        html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+    except Exception as e:  # noqa: BLE001
+        print("No se pudo leer el calendario público:", e)
+        return None
+    tips = {}
+    for m in re.finditer(r'<tool-tip[^>]*for="([^"]+)"[^>]*>\s*([^<]*)</tool-tip>', html):
+        n = re.match(r"\s*(\d[\d,]*)", m.group(2))
+        tips[m.group(1)] = int(n.group(1).replace(",", "")) if n else 0
+    days = []
+    for m in re.finditer(r'<td[^>]*data-date="(\d{4}-\d{2}-\d{2})"[^>]*>', html):
+        tag = m.group(0)
+        idm = re.search(r'id="([^"]+)"', tag)
+        lvl = re.search(r'data-level="(\d)"', tag)
+        cnt = tips.get(idm.group(1)) if idm else None
+        if cnt is None:
+            cnt = int(lvl.group(1)) if lvl else 0
+        days.append({"date": m.group(1), "contributionCount": cnt})
+    total = re.search(r"([\d,]+)\s+contributions?\s+in the last year", html)
+    if not days:
+        return None
+    return {"days": days, "total": int(total.group(1).replace(",", "")) if total else sum(d["contributionCount"] for d in days)}
+
+
 def summarize(u):
     repos = u["repositories"]["nodes"]
     own = sorted([r for r in repos if not r["isFork"]], key=lambda r: r["pushedAt"] or "", reverse=True)
@@ -74,6 +103,13 @@ def summarize(u):
     top = sorted(langs.items(), key=lambda kv: -kv[1][0])[:6]
 
     days = [d for w in u["contributionsCollection"]["contributionCalendar"]["weeks"] for d in w["contributionDays"]]
+    cc = u["contributionsCollection"]
+    year_total = cc["contributionCalendar"]["totalContributions"]
+    if year_total == 0:
+        cal = scrape_calendar(u["login"])
+        if cal:
+            days, year_total = cal["days"], cal["total"]
+            print(f"Calendario público: {year_total} contribuciones")
     days.sort(key=lambda d: d["date"])
     longest = run = 0
     for d in days:
@@ -89,8 +125,6 @@ def summarize(u):
             break
     last_active = next((d["date"] for d in reversed(days) if d["contributionCount"]), None)
 
-    cc = u["contributionsCollection"]
-    year_total = cc["contributionCalendar"]["totalContributions"]
     created = dt.datetime.fromisoformat(u["createdAt"].replace("Z", "+00:00"))
     years = (dt.datetime.now(dt.timezone.utc) - created).days / 365.25
 
@@ -103,7 +137,7 @@ def summarize(u):
         "followers": u["followers"]["totalCount"],
         "repos": u["repositories"]["totalCount"],
         "stars": sum(r["stargazerCount"] for r in own),
-        "commits": cc["totalCommitContributions"],
+        "commits": cc["totalCommitContributions"] or year_total - cc["totalPullRequestContributions"] - cc["totalIssueContributions"],
         "prs": cc["totalPullRequestContributions"],
         "issues": cc["totalIssueContributions"],
         "private": cc["restrictedContributionsCount"],
